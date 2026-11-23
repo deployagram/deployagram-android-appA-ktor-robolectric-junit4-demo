@@ -12,12 +12,19 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 
-/** The one screen of AppA: enter an email, press "Recommend book", see the suggestion. */
+/**
+ * The one screen of AppA: enter an email, press "Recommend book", see the suggestion. "Load Config" calls AliceMessager,
+ * sending "Hello" once a book has been recommended, and an empty payload before that.
+ */
 class MainActivity : ComponentActivity() {
 
     private val bookOverflow = BookOverflowClient()
+    private val aliceMessagerApp = AliceMessagerClient()
+
+    private var recommendation: BookSuggestion? = null
 
     private lateinit var result: TextView
+    private lateinit var configResult: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +42,15 @@ class MainActivity : ComponentActivity() {
             textSize = 18f
             setTextColor(Color.BLACK)
         }
+        val loadConfig = Button(this).apply {
+            text = "Load Config"
+            setOnClickListener { loadConfig() }
+        }
+        configResult = TextView(this).apply {
+            gravity = Gravity.START
+            textSize = 18f
+            setTextColor(Color.BLACK)
+        }
 
         setContentView(LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -42,6 +58,8 @@ class MainActivity : ComponentActivity() {
             addView(email)
             addView(recommend)
             addView(result)
+            addView(loadConfig)
+            addView(configResult)
         })
     }
 
@@ -49,9 +67,25 @@ class MainActivity : ComponentActivity() {
         result.text = "Asking BookOverflow…"
         lifecycleScope.launch {
             val outcome = bookOverflow.suggestionFor(email)
+            outcome.onSuccess { recommendation = it }
             result.text = outcome.fold(
                 onSuccess = { it.describe() },
                 onFailure = { failure -> messageFor(email, failure) },
+            )
+        }
+    }
+
+    private fun loadConfig() {
+        // "Hello" once a book has been recommended, and an empty payload before that.
+        val payload = if (recommendation != null) "Hello" else null
+        configResult.text = "Asking AliceMessager…"
+        lifecycleScope.launch {
+            val outcome = runCatching { aliceMessagerApp.sendConfig(payload) }
+            configResult.text = outcome.fold(
+                onSuccess = { it },
+                onFailure = { failure ->
+                    if (failure is AliceMessagerRefused) failure.reply else "Sorry, ${failure.message}"
+                },
             )
         }
     }
