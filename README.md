@@ -18,6 +18,9 @@ answer:
 | Email is blank, and BookOverflow refuses (400) | `You must enter a valid email!`                              |
 | Any other failure                              | `Sorry, no suggestion right now (<reason>)`                  |
 
+For Load Config, AliceMessager answers `{"message":"Hello"}` with `200` and `{"message":"World"}`. Any other payload,
+including an empty one, gets `400` and `{"message":"Is someone there?"}`. The screen shows just the message.
+
 ## What it is for
 
 * show how an app calls a service with **Ktor**, and how a test stands in for that service with Ktor's **MockEngine**;
@@ -51,8 +54,12 @@ app/src/main/java/com/deployagram/demo/appa/
     BookOverflowClient.kt    GET /BookOverflow/suggestion, with a Ktor client
     BookSuggestion.kt        the suggestion, serialised with kotlinx.serialization
     BookOverflowConfig.kt    where BookOverflow is, and the engine that sends requests (the test changes both)
+    AliceMessagerClient.kt the Load Config call to AliceMessager, with a Ktor client
+    AliceMessagerConfig.kt where AliceMessager is, and its engine (the test changes it)
 app/src/test/java/com/deployagram/demo/appa/
-    RecommendBookScreenTest.kt   the two JVM tests, and the MockEngine double for BookOverflow
+    BackEnds.kt              BookOverflow and AliceMessager behind one MockEngine, routed by port
+    RecommendBookScreenTest.kt   the two Recommend book tests
+    LoadConfigButtonTest.kt      the two Load Config tests
 ```
 
 ## Deployagram instrumentation
@@ -61,8 +68,9 @@ The tests are instrumented with two Deployagram packages:
 
 * `deployagram-junit4`: `DeployagramRule`, a JUnit 4 rule that ends each test's sequence diagram in the Collector. It is
   declared on the test class, because Robolectric runs on the JVM and has no run-level listener to register.
-* `deployagram-mockwebserver`: `RecordingDispatcher`, which wraps the BookOverflow double. It records the request AppA
-  sends through Ktor, and the answer BookOverflow gives.
+* `deployagram-ktor-mockengine`: `RecordingMockEngine`, which wraps the MockEngine double for both back-ends. It records each
+  request AppA sends through Ktor, and each answer, under the callee the request's URL belongs to: `ORG_…:BookOverflow`
+  for port 8080, and `AliceMessager` for port 8081.
 
 The Collector runs on the host, and the tests reach it at `http://localhost:1152`. The caller and callee are named as in
 the Java repo: `AliceA` calls `ORG_ctm_01m1j08sx96792d2tysabvyadp:BookOverflow`.

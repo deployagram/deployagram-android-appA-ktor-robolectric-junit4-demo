@@ -10,6 +10,7 @@ import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withText
+import com.deployagram.junit4.DeployagramRule
 import org.hamcrest.CoreMatchers.containsString
 import org.junit.After
 import org.junit.Before
@@ -30,6 +31,9 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 class LoadConfigButtonTest {
 
+    @get:Rule
+    val deployagram = DeployagramRule()
+
     private val defaultBookOverflowEngine = BookOverflowConfig.engine
     private val defaultAliceMessagerEngine = AliceMessagerConfig.engine
     private lateinit var backEnds: BackEnds
@@ -40,8 +44,9 @@ class LoadConfigButtonTest {
     fun startBackEnds() {
         backEnds = BackEnds()
         enteredEmail = "reader-${UUID.randomUUID()}@example.com"
-        BookOverflowConfig.engine = backEnds.engine()
-        AliceMessagerConfig.engine = backEnds.engine()
+        // Deployagram records every exchange with the back-end it was sent to.
+        BookOverflowConfig.engine = backEnds.recordedEngine()
+        AliceMessagerConfig.engine = backEnds.recordedEngine()
     }
 
     @After

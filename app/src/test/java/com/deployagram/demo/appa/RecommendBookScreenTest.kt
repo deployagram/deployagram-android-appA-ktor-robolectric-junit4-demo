@@ -11,6 +11,8 @@ import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
 import androidx.test.espresso.matcher.ViewMatchers.withHint
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import io.ktor.client.engine.HttpClientEngine
+import com.deployagram.junit4.DeployagramRule
+import com.deployagram.ktor.mockengine.RecordingMockEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.MockRequestHandler
@@ -43,6 +45,9 @@ import java.util.concurrent.TimeUnit
 @RunWith(RobolectricTestRunner::class)
 class RecommendBookScreenTest {
 
+    @get:Rule
+    val deployagram = DeployagramRule()
+
     private val defaultEngine = BookOverflowConfig.engine
     private lateinit var bookOverflowAnswers: SuggestionAnswers
     private lateinit var enteredEmail: String
@@ -52,7 +57,9 @@ class RecommendBookScreenTest {
     fun startBookOverflow() {
         bookOverflowAnswers = SuggestionAnswers()
         enteredEmail = "reader-${UUID.randomUUID()}@example.com"
-        BookOverflowConfig.engine = MockEngine(bookOverflowAnswers.handler())
+        // Deployagram records the request AppA sends, and the answer BookOverflow gives.
+        BookOverflowConfig.engine = RecordingMockEngine("AliceA", "ORG_ctm_01m1j08sx96792d2tysabvyadp:BookOverflow")
+            .wrap(bookOverflowAnswers.handler())
     }
 
     @After

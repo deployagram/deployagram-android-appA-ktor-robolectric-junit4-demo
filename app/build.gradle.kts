@@ -50,6 +50,9 @@ dependencies {
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("androidx.test.espresso:espresso-core:3.6.1")
     testImplementation("io.ktor:ktor-client-mock:3.1.3")
+    // Deployagram: the JUnit 4 rule, and the Ktor MockEngine recorder. Published on Maven Central.
+    testImplementation("com.deployagram:deployagram-junit4:1.1.0")
+    testImplementation("com.deployagram:deployagram-ktor-mockengine:1.1.0")
 }
 
 // Robolectric runs Android SDK 36 on the JVM, and that needs Java 21. The app itself still compiles for Java 17.

@@ -1,5 +1,6 @@
 package com.deployagram.demo.appa
 
+import com.deployagram.ktor.mockengine.RecordingMockEngine
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandler
@@ -38,6 +39,14 @@ class BackEnds {
 
     fun engine(): HttpClientEngine = MockEngine(handler())
 
+    /** The same back-ends, with every exchange recorded to the Collector under the callee the URL belongs to. */
+    fun recordedEngine(): HttpClientEngine = RecordingMockEngine("AliceA", ::calleeFor).wrap(handler())
+
+    companion object {
+        /** The callee's name on the diagram, as the Java repo names it, for the route a URL is on. */
+        fun calleeFor(url: Url): String =
+            if (url.port == ALICE_MESSAGER_PORT) "AliceMessager" else "ORG_ctm_01m1j08sx96792d2tysabvyadp:BookOverflow"
+    }
 }
 
 /**
